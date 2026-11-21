@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Audio Equalizer — загружайте свою музыку и слушайте её через 10-полосный эквалайзер с пресетами, балансом и моно-режимом.">
+  <meta name="theme-color" content="#0b0b14">
+  <title>Audio Equalizer — музыка с душой</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b5cf6'/%3E%3Crect x='6' y='12' width='4' height='10' rx='2' fill='white'/%3E%3Crect x='14' y='7' width='4' height='18' rx='2' fill='white'/%3E%3Crect x='22' y='15' width='4' height='7' rx='2' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="bg" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div>
+        <h1>Audio Equalizer</h1>
+        <p>Ваша музыка — ваше звучание</p>
+      </div>
+    </div>
+    <button class="btn ghost" id="addBtn" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      Добавить музыку
+    </button>
+  </header>
+
+  <main class="layout">
+    <!-- Проигрыватель -->
+    <section class="card player" id="player" aria-label="Проигрыватель">
+      <div class="now">
+        <div class="disc" aria-hidden="true"><div class="disc-label"></div></div>
+        <div class="meta">
+          <span class="eyebrow">Сейчас играет</span>
+          <h2 id="title">Ничего не выбрано</h2>
+          <p id="subtitle">Добавьте треки в библиотеку ниже</p>
+        </div>
+      </div>
+
+      <canvas id="viz" aria-hidden="true"></canvas>
+
+      <div class="seek">
+        <span id="cur">0:00</span>
+        <input type="range" id="seek" min="0" max="0" step="0.1" value="0" aria-label="Перемотка">
+        <span id="dur">0:00</span>
+      </div>
+
+      <div class="controls">
+        <button class="icon-btn" id="shuffleBtn" type="button" title="Перемешать" aria-label="Перемешать" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3c2 0 3 1 4.5 3.2L14 14c1.5 2.2 2.5 3 4.5 3H21M3 17h3c2 0 3-1 4.5-3.2M21 7h-3c-2 0-3 1-4.5 3.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="icon-btn" id="prevBtn" type="button" title="Предыдущий" aria-label="Предыдущий">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M19 6l-9 6 9 6z" fill="currentColor"/></svg>
+        </button>
+        <button class="play-btn" id="playBtn" type="button" title="Играть / пауза (пробел)" aria-label="Играть">
+          <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/></svg>
+          <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.2" fill="currentColor"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.2" fill="currentColor"/></svg>
+        </button>
+        <button class="icon-btn" id="nextBtn" type="button" title="Следующий" aria-label="Следующий">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M5 6l9 6-9 6z" fill="currentColor"/></svg>
+        </button>
+        <button class="icon-btn" id="repeatBtn" type="button" title="Повтор" aria-label="Повтор" data-mode="off">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12V9a3 3 0 0 1 3-3h11M20 12v3a3 3 0 0 1-3 3H6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 3l3 3-3 3M7 15l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <b class="repeat-one">1</b>
+        </button>
+      </div>
+
+      <div class="volume">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8" aria-label="Громкость">
+      </div>
+    </section>
+
+    <!-- Эквалайзер -->
+    <section class="card eq" id="eqCard" aria-label="Эквалайзер">
+      <div class="eq-head">
+        <div>
+          <h2>Эквалайзер</h2>
+          <p class="muted">10 полос · от 60 Гц до 16 кГц · двойной клик — сброс полосы</p>
+        </div>
+        <label class="switch" title="Включить / выключить эквалайзер">
+          <input type="checkbox" id="eqEnabled" checked aria-label="Эквалайзер включён">
+          <i></i>
+        </label>
+      </div>
+
+      <div class="presets" id="presets" role="group" aria-label="Пресеты"></div>
+
+      <div class="bands" id="bands"></div>
+
+      <div class="eq-foot">
+        <label class="row">
+          <span>Предусилитель</span>
+          <input type="range" id="preamp" min="-12" max="12" step="0.5" value="0" aria-label="Предусилитель">
+          <output id="preampOut">0 dB</output>
+        </label>
+        <label class="row">
+          <span>Баланс</span>
+          <input type="range" id="pan" min="-1" max="1" step="0.05" value="0" aria-label="Баланс">
+          <output id="panOut">Центр</output>
+        </label>
+        <div class="row-actions">
+          <label class="toggle">
+            <span>Моно</span>
+            <span class="switch small">
+              <input type="checkbox" id="mono" aria-label="Моно">
+              <i></i>
+            </span>
+          </label>
+          <button class="btn ghost small" id="resetBtn" type="button">Сбросить</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Библиотека -->
+    <section class="card library" aria-label="Библиотека">
+      <div class="lib-head">
+        <div>
+          <h2>Библиотека</h2>
+          <p class="muted" id="libCount">Пока пусто</p>
+        </div>
+        <button class="btn ghost small" id="clearBtn" type="button">Очистить</button>
+      </div>
+
+      <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Выбрать файлы">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0l-4 4m4-4l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p><b>Перетащите музыку сюда</b> или нажмите, чтобы выбрать файлы</p>
+        <small>MP3, WAV, OGG, FLAC, M4A, AAC, OPUS — файлы не покидают ваш браузер</small>
+      </div>
+
+      <form class="url-row" id="urlForm" autocomplete="off">
+        <input type="url" id="urlInput" placeholder="Или вставьте прямую ссылку на аудио или поток (mp3, aac…)" aria-label="Ссылка на аудио">
+        <button class="btn small" type="submit">Добавить</button>
+      </form>
+
+      <ol class="playlist" id="playlist"></ol>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Горячие клавиши: <kbd>Пробел</kbd> — пауза, <kbd>←</kbd> / <kbd>→</kbd> — перемотка на 5 секунд</p>
+  </footer>
+
+  <input type="file" id="fileInput" accept="audio/*,.mp3,.wav,.ogg,.oga,.flac,.m4a,.aac,.opus,.weba" multiple hidden>
+  <audio id="audio" preload="metadata" crossorigin="anonymous"></audio>
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0l-4 4m4-4l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <p>Отпустите, чтобы добавить в библиотеку</p>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
